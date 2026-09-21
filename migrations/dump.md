@@ -421,3 +421,5 @@ $config.AllNodes | Where-Object { $_.Role -eq "hyper_v" } | ForEach-Object {
     }
 }
 ```
+
+https://gist.github.com/moh-abk/5615c97eeaa20ffd6f3b7b08906be9cf
