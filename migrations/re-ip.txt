@@ -1,0 +1,24 @@
+1. Make sure the new addresses are free (from CONFIG1)
+
+11..17 | % { $ip="172.21.0.$_"; arp -d $ip 2>$null; [pscustomobject]@{IP=$ip; InUse=(Test-Connection $ip -Count 1 -Quiet)} }
+
+Every address should show InUse = False.
+
+2. Re-IP each host from the iLO console (BM02–BM07 first, BM01 last)
+
+$if  = "vEthernet (OC-Servers)"
+$new = "172.21.0.1X"          # set per host
+$len = <prefix>; $gw = "<gateway>"   # same as now
+
+Get-NetIPAddress -InterfaceAlias $if -AddressFamily IPv4 | Remove-NetIPAddress -Confirm:$false
+Remove-NetRoute -InterfaceAlias $if -DestinationPrefix 0.0.0.0/0 -Confirm:$false -ErrorAction SilentlyContinue
+New-NetIPAddress -InterfaceAlias $if -IPAddress $new -PrefixLength $len -DefaultGateway $gw
+Get-VMNetworkAdapterVlan -ManagementOS   # should show Access 201
+
+3. Rebuild on CONFIG1 (logged in as Marvin)
+
+arp -d *
+cd C:\dsc
+.\Build-MecmFiles.ps1       # only needed if you edited config.ps1
+.\Build-Mof.ps1
+.\Copy-BareMetalFiles.ps1   # pushes to the BMs at their new IPs
